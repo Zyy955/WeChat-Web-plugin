@@ -1,9 +1,14 @@
+import "./model/loader.js"
 import fs from "fs"
 import path from "path"
+import crypto from "crypto"
 import Wechat from "wechat4u"
 import fetch from "node-fetch"
+import { execSync } from "child_process"
+import { update } from "../other/update.js"
 import { fileTypeFromBuffer } from "file-type"
 import PluginsLoader from "../../lib/plugins/loader.js"
+
 
 let bot = {}
 /** 设置主人 */

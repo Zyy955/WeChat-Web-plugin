@@ -67,7 +67,7 @@ git clone --depth 1 https://github.com/Zyy955/WeChat-Web-plugin ./plugins/WeChat
 
 | 名称 | 作者 | GitHub | Gitee | 备注  | 
 |------| ---- | ------ | ----- | ----- | 
-| ComWeChatBotClient | [@那个小白白白](https://github.com/JustUndertaker) | [☞GitHub](https://github.com/JustUndertaker/ComWeChatBotClient) | ----- | 微信机器人应用端 |
+| ComWeChatBotClient | [@SPACELAN](https://github.com/spacelan) | [☞GitHub](https://github.com/nodeWechat/wechat4u/blob/master/run-core.js) | ----- | 微信 wechat web 网页版接口的 JavaScript 实现 |
 | Yunzai-Bot | [@Le-niao](https://gitee.com/Le-niao) | [☞GitHub](https://github.com/Le-niao/Yunzai-Bot) | [☞Gitee](https://gitee.com/Le-niao/Yunzai-Bot) | 原版 Yunzai |
 | Yunzai-Bot | [@Le-niao](https://gitee.com/Le-niao) | [☞GitHub](https://github.com/Le-niao/Yunzai-Bot) | [☞Gitee](https://gitee.com/Le-niao/Yunzai-Bot) | 原版 Yunzai |
 | Yunzai-Bot | [@喵喵](https://gitee.com/yoimiya-kokomi) | [☞GitHub](https://github.com/yoimiya-kokomi/Yunzai-Bot) | [☞Gitee](https://gitee.com/yoimiya-kokomi/Yunzai-Bot) | 喵喵维护版 Yunzai |
