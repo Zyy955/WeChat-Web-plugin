@@ -33,6 +33,11 @@ Github：
 git clone --depth 1 https://github.com/Zyy955/WeChat-Web-plugin ./plugins/WeChat-Web-plugin && pnpm install -P
 ```
 
+## 实名验证
+
+所有账号都需要实名验证方可使用，注册新账号之后请前往 `钱包` -> `身份信息` -> `实名验证` 进行操作。
+
+
 ## 登录账号
 
 ```

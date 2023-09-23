@@ -1,7 +1,6 @@
 import fs from "fs"
 import lodash from "lodash"
 import { Group } from "icqq/lib/group.js"
-import cfg from "../../../lib/config/config.js"
 import common from "../../../lib/common/common.js"
 import PluginsLoader from "../../../lib/plugins/loader.js"
 
@@ -13,7 +12,7 @@ if (fs.existsSync("./plugins/WeChat-plugin")) QQGuild = true
 
 
 /** PC微信HOOK适配器 */
-global.WeiXin = {
+export let WeiXin = {
     api: {},
     BotCfg: {},
     ws: {},
@@ -30,13 +29,12 @@ global.WeiXin = {
 
 /** 版本、名称 */
 const Yz = JSON.parse(fs.readFileSync("./package.json", "utf-8"))
-WeiXin.cfg = {
-    Yz: {
-        ver: Yz.version,
-        name: Yz.name === "miao-yunzai" ? "Miao-Yunzai" : "Yunzai-Bot",
-    }
-}
+const wx = JSON.parse(fs.readFileSync("./plugins/WeChat-Web-plugin/package.json", "utf-8"))
 
+WeiXin.cfg = {
+    Yz: { ver: Yz.version, name: Yz.name === "miao-yunzai" ? "Miao-Yunzai" : "Yunzai-Bot", },
+    ver: wx.version, name: wx.name, bot: wx.dependencies.wechat4u
+}
 
 
 // const originalAs = Group.as

@@ -5,6 +5,7 @@ import crypto from "crypto"
 import Wechat from "wechat4u"
 import fetch from "node-fetch"
 import { execSync } from "child_process"
+import { WeiXin } from "./model/loader.js"
 import { update } from "../other/update.js"
 import { fileTypeFromBuffer } from "file-type"
 import PluginsLoader from "../../lib/plugins/loader.js"
@@ -37,7 +38,7 @@ const adapter = new class WeChat {
 
         /** 捕获错误 */
         bot[id].on('error', err => {
-            logger.error('错误：', err?.tips)
+            logger.error('错误：', err?.tips || err)
             logger.debug('错误：', err)
         })
     }
@@ -439,25 +440,25 @@ const adapter = new class WeChat {
                     logger.info('登录成功')
                     // 保存数据，将数据序列化之后保存到任意位置
                     fs.writeFileSync(`${this._data}/data/${id}.json`, JSON.stringify(bot[id].botData))
-                    const uin = bot[id].user.Uin
+
                     /** 米游社主动推送、椰奶状态pro */
                     if (!Bot?.adapter) {
                         Bot.adapter = [Bot.uin]
-                        Bot.adapter.push(uin)
+                        Bot.adapter.push(id)
                     } else {
-                        Bot.adapter.push(uin)
+                        Bot.adapter.push(id)
                         /** 去重防止断连后出现多个重复的id */
                         Bot.adapter = Array.from(new Set(Bot.adapter.map(JSON.stringify))).map(JSON.parse)
                     }
-                    Bot[uin] = {
-                        uin: uin,
+                    Bot[id] = {
+                        uin: id,
                         nickname: bot[id].user.NickName,
                         avatar: bot[id].CONF.origin + bot[id].user.HeadImgUrl, // 头像...
-                        stat: { start_time: Date.now() / 1000 },
-                        apk: { display: qg.cfg.name, version: qg.cfg.ver },
+                        stat: { start_time: Date.now() / 1000, recv_msg_cnt: Bot.uin.stat?.recv_msg_cnt || "未知" },
+                        apk: { display: WeiXin.cfg.name, version: WeiXin.cfg.ver },
                         fl: new Map(),
                         gl: new Map(),
-                        version: { id: "wx", name: "微信Bot", version: qg.cfg.bot.replace("^", "") },
+                        version: { id: "wx", name: "微信Bot", version: WeiXin.cfg.bot.replace("^", "") },
                         pickGroup: (groupId) => {
                             return {
                                 sendMsg: (reply, reference = false) => {
@@ -537,25 +538,24 @@ export class WebWcChat extends plugin {
             // 保存数据，将数据序列化之后保存到任意位置
             fs.writeFileSync(`${process.cwd()}/plugins/WeChat-Web-plugin/data/data/${id}.json`, JSON.stringify(bot[id].botData))
 
-            const uin = bot[id].user.Uin
             /** 米游社主动推送、椰奶状态pro */
             if (!Bot?.adapter) {
                 Bot.adapter = [Bot.uin]
-                Bot.adapter.push(uin)
+                Bot.adapter.push(id)
             } else {
-                Bot.adapter.push(uin)
+                Bot.adapter.push(id)
                 /** 去重防止断连后出现多个重复的id */
                 Bot.adapter = Array.from(new Set(Bot.adapter.map(JSON.stringify))).map(JSON.parse)
             }
-            Bot[uin] = {
-                uin: uin,
+            Bot[id] = {
+                uin: id,
                 nickname: bot[id].user.NickName,
                 avatar: bot[id].CONF.origin + bot[id].user.HeadImgUrl, // 头像...
                 stat: { start_time: Date.now() / 1000 },
-                apk: { display: qg.cfg.name, version: qg.cfg.ver },
+                apk: { display: WeiXin.cfg.name, version: WeiXin.cfg.ver },
                 fl: new Map(),
                 gl: new Map(),
-                version: { id: "wx", name: "微信Bot", version: qg.cfg.bot.replace("^", "") },
+                version: { id: "wx", name: "微信Bot", version: WeiXin.cfg.bot.replace("^", "") },
                 pickGroup: (groupId) => {
                     return {
                         sendMsg: (reply, reference = false) => {
