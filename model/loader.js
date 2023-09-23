@@ -1,6 +1,7 @@
 import fs from "fs"
 import lodash from "lodash"
 import { Group } from "icqq/lib/group.js"
+import cfg from "../../../lib/config/config.js"
 import common from "../../../lib/common/common.js"
 import PluginsLoader from "../../../lib/plugins/loader.js"
 
