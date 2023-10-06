@@ -10,6 +10,7 @@ import { WeiXin } from "./model/loader.js"
 import { update } from "../other/update.js"
 import { fileTypeFromBuffer } from "file-type"
 import PluginsLoader from "../../lib/plugins/loader.js"
+import { cfg } from "./model/config.js"
 
 
 let bot = {}
@@ -147,6 +148,18 @@ const adapter = new class WeChat {
             case bot[id].CONF.MSGTYPE_APP:
                 break
 
+            /** 好友请求消息 */
+            case bot[id].CONF.MSGTYPE_VERIFYMSG:
+                if (!cfg.autoFriend) {
+                    break
+                }
+                bot[id].verifyUser(msg.RecommendInfo.UserName, msg.RecommendInfo.Ticket)
+                    .then(res => {
+                        console.log(`通过了 ${bot.Contact.getDisplayName(msg.RecommendInfo)} 好友请求`)})
+                    .catch(err => {
+                        bot[id].emit('error', err)})
+                break
+            
             default:
                 break
         }
