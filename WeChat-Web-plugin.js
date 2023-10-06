@@ -155,7 +155,7 @@ const adapter = new class WeChat {
                 }
                 bot[id].verifyUser(msg.RecommendInfo.UserName, msg.RecommendInfo.Ticket)
                     .then(res => {
-                        console.log(`通过了 ${bot.Contact.getDisplayName(msg.RecommendInfo)} 好友请求`)})
+                        console.log(`通过了 ${bot[id].Contact.getDisplayName(msg.RecommendInfo)} 好友请求`)})
                     .catch(err => {
                         bot[id].emit('error', err)})
                 break
