@@ -84,15 +84,23 @@ if (!QQGuild)
         }
     }
 
-/** 劫持修改getGroupMemberInfo方法 */
-if (!QQGuild)
-    Bot.getGroupMemberInfo = async function (group_id, id) {
-        if (/qg_|@/.test(String(group_id))) {
-            const scene = String(group_id).includes("qg_") ? "QQGuild-Bot" : "WeChat-Bot"
-            return {
-                group_id: group_id,
-                user_id: id,
-                nickname: scene,
+/** 劫持修改getGroupMemberInfo方法 如果ws插件存在，则不修改，ws插件已进行修改~ */
+if (!QQGuild && !fs.existsSync(process.cwd() + "/plugins/ws-plugin")) {
+    Bot.getGroupMemberInfo = async function (group_id, user_id) {
+        let result
+        try {
+            result = await WeiXin.old.getGroupMemberInfo.call(this, group_id, user_id)
+        } catch (error) {
+            let nickname
+            if (error.stack.includes('ws-plugin')) {
+                nickname = 'chronocat'
+            } else {
+                nickname = String(group_id).includes("qg_") ? "QQGuild-Bot" : "WeChat-Bot"
+            }
+            result = {
+                group_id,
+                user_id,
+                nickname,
                 card: "",
                 sex: "female",
                 age: 6,
@@ -107,10 +115,10 @@ if (!QQGuild)
                 area: "南极洲",
                 rank: "潜水",
             }
-        } else {
-            return WeiXin.old.getGroupMemberInfo.call(this, group_id, id)
+            return result
         }
     }
+}
 
 
 
