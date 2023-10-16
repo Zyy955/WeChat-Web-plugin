@@ -49,7 +49,7 @@ const adapter = new class WeChat {
         /** 屏蔽bot自身消息 */
         if (msg.isSendBySelf) return
         /** 屏蔽历史消息 */
-        if (await redis.get("wx:Block_historical_messages")) return
+        if (Math.floor(Date.now() / 1000) - msg.CreateTime > 10) return
 
         let atBot = false
         /** 当前机器人群聊列表 */
@@ -450,7 +450,6 @@ const adapter = new class WeChat {
                 adapter.addbot(id)
                 /** 登录成功 */
                 bot[id].on('login', () => {
-                    redis.set("wx:Block_historical_messages", JSON.stringify(new Date().getTime()), { EX: 5 })
                     logger.info('登录成功')
                     // 保存数据，将数据序列化之后保存到任意位置
                     fs.writeFileSync(`${this._data}/data/${id}.json`, JSON.stringify(bot[id].botData))
@@ -547,7 +546,6 @@ export class WebWcChat extends plugin {
 
         /** 登录成功 */
         bot[id].on('login', () => {
-            redis.set("wx:Block_historical_messages", JSON.stringify(new Date().getTime()), { EX: 15 })
             this.e.reply("登录成功")
             // 保存数据，将数据序列化之后保存到任意位置
             fs.writeFileSync(`${process.cwd()}/plugins/WeChat-Web-plugin/data/data/${id}.json`, JSON.stringify(bot[id].botData))
