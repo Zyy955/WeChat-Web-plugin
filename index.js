@@ -1,7 +1,7 @@
 import "./model/loader.js"
 import fs from "fs"
 import path from "path"
-import Yaml from "yaml"
+import _Yaml from "./model/yaml.js"
 import crypto from "crypto"
 import Wechat from "wechat4u"
 import fetch from "node-fetch"
@@ -64,6 +64,8 @@ const adapter = new class WeChat {
 
         let group_id
         let user_id = `wx_${msg.FromUserName}`
+
+
         let sub_type = "friend"
         let message_type = "private"
         /** 群聊 */
@@ -72,7 +74,15 @@ const adapter = new class WeChat {
             message_type = "group"
             group_id = `wx_${msg.FromUserName}`
             user_id = `wx_${msg.OriginalContent.split(":")[0]}`
+
         }
+
+        /** 从redis中读取id */
+        let _user_id = await redis.get(user_id)
+        _user_id ? user_id = _user_id : user_id
+        let _group_id = await redis.get(group_id)
+        _group_id ? group_id = _group_id : group_id
+
 
         /**
          * 根据官方文档的说法
@@ -155,11 +165,13 @@ const adapter = new class WeChat {
                 }
                 bot[id].verifyUser(msg.RecommendInfo.UserName, msg.RecommendInfo.Ticket)
                     .then(res => {
-                        logger.info(`通过了 ${bot[id].Contact.getDisplayName(msg.RecommendInfo)} 好友请求`)})
+                        logger.info(`通过了 ${bot[id].Contact.getDisplayName(msg.RecommendInfo)} 好友请求`)
+                    })
                     .catch(err => {
-                        bot[id].emit('error', err)})
+                        bot[id].emit('error', err)
+                    })
                 break
-            
+
             default:
                 break
         }
@@ -525,9 +537,40 @@ export class WebWcChat extends plugin {
                     fnc: "del_master",
                     permission: "master"
                 },
+                {
+                    reg: /^#微信设置(群)?id/i,
+                    fnc: "setId",
+                },
             ]
         })
 
+    }
+
+
+    async setId() {
+        const msg = this.e.msg.replace(/#微信设置(群)?id/gi, "").trim()
+        if (!msg) return this.reply("ID呢？")
+        if (this.e.msg.includes("群") && this.e.isMaster) {
+            await redis.set(this.e.group_id, `wx_${msg}`)
+            return this.reply("设置成功")
+        }
+
+        const cfg = new _Yaml("./config/config/other.yaml")
+        /** 检测用户是否已经是主人 */
+        if (cfg.value("masterQQ", `wx_${msg}`) && !this.e.isMaster)
+            return this.reply("你不是主人，不可以改成主人的id啦！")
+
+        if (this.e.user_id.includes("wx_*") && !this.e.isMaster) {
+            return this.reply("你已经更换过一次了，请联系主人为您更换~")
+        }
+        if (cfg?.SetID == 1 && !this.e.isMaster) {
+            if (await redis.get(`${this.e.user_id}`)) {
+                return this.reply(`你已经绑定过id了，当前模式为仅主人可更改，普通用户仅可绑定不可更改。`)
+            }
+        }
+
+        await redis.set(this.e.user_id, `wx_${msg}`)
+        return this.reply("绑定成功~")
     }
 
     async login() {
@@ -626,37 +669,47 @@ export class WebWcChat extends plugin {
     }
 
     async master(e) {
-        /** 对用户id进行默认赋值 */
-        user = e.user_id
-        let cfg = fs.readFileSync("./config/config/other.yaml", "utf8")
+        let user_id = e.user_id
         if (e.at) {
+            const cfg = new _Yaml("./config/config/other.yaml")
             /** 存在at检测触发用户是否为主人 */
             if (!e.isMaster) return e.reply(`只有主人才能命令我哦~\n(*/ω＼*)`)
-            /** 检测被at的用户是否已经是主人 */
-            if (cfg.match(RegExp(`- "?${e.at}"?`)))
-                return e.reply([segment.at(e.at), "已经是主人了哦(〃'▽'〃)"])
-            user = e.at
-            e.reply(Yunzai.add(e))
+            user_id = e.at
+            /** 检测用户是否已经是主人 */
+            if (cfg.value("masterQQ", user_id)) return e.reply([segment.at(user_id), "已经是主人了哦(〃'▽'〃)"])
+            /** 添加主人 */
+            return await e.reply(apps.master(e, user_id))
         } else {
             /** 检测用户是否已经是主人 */
             if (e.isMaster) return e.reply([segment.at(e.user_id), "已经是主人了哦(〃'▽'〃)"])
-            /** 生成验证码 */
-            sign[e.user_id] = crypto.randomUUID()
-            logger.mark(`设置主人验证码：${logger.green(sign[e.user_id])}`)
-            /** 开始上下文 */
-            this.setContext('SetAdmin')
-            e.reply([segment.at(e.user_id), `请输入控制台的验证码`])
         }
+        /** 生成验证码 */
+        sign[user_id] = crypto.randomUUID()
+        logger.mark(`设置主人验证码：${logger.green(sign[e.user_id])}`)
+        await e.reply([segment.at(e.user_id), `请输入控制台的验证码`])
+        /** 开始上下文 */
+        return await this.setContext('SetAdmin')
     }
 
     async del_master(e) {
-        const file = "./config/config/other.yaml"
+        // const file = _path
         if (!e.at) return e.reply("你都没有告诉我是谁！快@他吧！^_^")
-        let cfg = fs.readFileSync(file, "utf8")
-        if (!cfg.match(RegExp(`- "?${e.at}"?`)))
-            return e.reply("这个人不是主人啦(〃'▽'〃)", false, { at: true })
-        cfg = cfg.replace(RegExp(`\\n  - "?${e.at}"?`), "")
-        fs.writeFileSync(file, cfg, "utf8")
+        const cfg = new _Yaml("./config/config/other.yaml")
+        /** trss */
+        if (cfg.hasIn("master")) {
+            if (!cfg.value("master", e.at)) {
+                return e.reply("这个人不是主人啦(〃'▽'〃)", false, { at: true })
+            }
+            cfg.delVal("master", e.at)
+            cfg.delVal("masterQQ", `${e.self_id}:${e.at}`)
+        }
+        /** 喵 */
+        else {
+            if (!cfg.value("masterQQ", e.at)) {
+                return e.reply("这个人不是主人啦(〃'▽'〃)", false, { at: true })
+            }
+            cfg.delVal("masterQQ", e.at)
+        }
         e.reply([segment.at(e.at), "拜拜~"])
     }
 
@@ -665,7 +718,7 @@ export class WebWcChat extends plugin {
         this.finish('SetAdmin')
         /** 判断验证码是否正确 */
         if (this.e.msg.trim() === sign[this.e.user_id]) {
-            this.e.reply(add(this.e))
+            this.e.reply(apps.master(this.e))
         } else {
             return this.reply([segment.at(this.e.user_id), "验证码错误"])
         }
@@ -681,31 +734,46 @@ if (Jsons.length > 0) {
 
 
 
-/** 设置主人 */
-function add(e) {
-    const _path = "./config/config/other.yaml"
-    let cfg = fs.readFileSync(_path, "utf8")
-    /** 使用正则表达式确认是TRSS还是Miao */
-    if (cfg.match(RegExp("master:"))) {
-        /** 保留注释 */
-        const document = Yaml.parseDocument(cfg)
-        const masterQQ = document.get("masterQQ")
-        masterQQ.add(user)
-        document.set("masterQQ", masterQQ)
+let apps = {
+    /** 设置主人 */
+    master(e, user_id = null) {
+        user_id = user_id || e.user_id
+        const cfg = new _Yaml("./config/config/other.yaml")
+        /** trss */
+        if (cfg.hasIn("master")) {
+            cfg.addVal("master", user_id)
+            cfg.addVal("masterQQ", `${e.self_id}:${user_id}`)
+        }
+        /** 喵 */
+        else {
+            cfg.addVal("masterQQ", user_id)
+        }
+        return [segment.at(user_id), "新主人好~(*/ω＼*)"]
+    },
 
-        const master = document.get("master")
-        master.add(`${e.self_id}:${user}`)
-        document.set("master", master)
+    /** 添加Bot */
+    async addBot(e) {
+        const cmd = e.msg.replace(/^#QQ频道设置/gi, "").replace(/：/g, ":").trim().split(':')
+        if (!/^1\d{8}$/.test(cmd[2])) return "appID 错误！"
+        if (!/^[0-9a-zA-Z]{32}$/.test(cmd[3])) return "token 错误！"
 
-        cfg = document.toString()
-    } else {
-        /** 保留注释 */
-        const document = Yaml.parseDocument(cfg)
-        const masterQQ = document.get("masterQQ")
-        masterQQ.add(user)
-        document.set("masterQQ", masterQQ)
-        cfg = document.toString()
+        let bot
+        const cfg = new _Yaml(_path + "/bot.yaml")
+        /** 重复的appID，删除 */
+        if (cfg.hasIn(cmd[2])) {
+            cfg.del(cmd[2])
+            return `Bot：${Bot[cmd[2]].name}${cmd[2]} 删除成功...重启后生效...`
+        } else {
+            bot = { appID: cmd[2], token: cmd[3], sandbox: cmd[0] === "1", allMsg: cmd[1] === "1" }
+        }
+
+        /** 保存新配置 */
+        cfg.addIn(cmd[2], bot)
+        try {
+            await (new guild).monitor([bot])
+            return `Bot：${Bot[cmd[2]].name}(${cmd[2]}) 已连接...`
+        } catch (err) {
+            return err
+        }
     }
-    fs.writeFileSync(_path, cfg, "utf8")
-    return [segment.at(user), "新主人好~(*/ω＼*)"]
 }

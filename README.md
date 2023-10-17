@@ -44,6 +44,17 @@ git clone --depth 1 https://github.com/Zyy955/WeChat-Web-plugin ./plugins/WeChat
 #微信登录
 ```
 
+# 一个特殊选项
+
+```
+#微信设置id test    (模式1玩家可设置一次,模式2可无数次，主人不受限制)
+#微信设置群id test   (仅主人可用)
+```
+
+可在设置里面更改模式
+
+
+
 ## 其他指令
 
 ```

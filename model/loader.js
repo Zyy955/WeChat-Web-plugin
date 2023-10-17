@@ -5,6 +5,17 @@ import cfg from "../../../lib/config/config.js"
 import common from "../../../lib/common/common.js"
 import PluginsLoader from "../../../lib/plugins/loader.js"
 
+/** 删除所有设置的键 */
+const arrKey = await redis.keys("wx_*")
+if (arrKey && arrKey.length > 0) {
+    for (let i of arrKey) {
+        try {
+            redis.del(i)
+        } catch (err) {
+            logger.error(err)
+        }
+    }
+}
 
 /** 检测QQ频道插件是否存在 */
 let QQGuild = false
