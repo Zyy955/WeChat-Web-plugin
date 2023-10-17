@@ -655,7 +655,8 @@ export class WebWcChat extends plugin {
         if (new_update.getPlugin(name)) {
             if (e.msg.includes("更新日志")) {
                 if (new_update.getPlugin(name)) {
-                    return e.reply(await new_update.getLog(name))
+                    await e.reply(await new_update.getLog(name))
+                    return false
                 }
             } else {
                 if (this.e.msg.includes('强制'))
