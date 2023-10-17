@@ -80,9 +80,15 @@ const adapter = new class WeChat {
         /** 从redis中读取id */
         let _user_id = await redis.get(user_id)
         _user_id ? user_id = _user_id : user_id
-        let _group_id = await redis.get(group_id)
-        _group_id ? group_id = _group_id : group_id
-
+        let _group_id
+        try {
+            if (group_id) {
+                _group_id = await redis.get(group_id)
+                _group_id ? group_id = _group_id : group_id
+            }
+        } catch (err) {
+            logger.error(err)
+        }
 
         /**
          * 根据官方文档的说法
