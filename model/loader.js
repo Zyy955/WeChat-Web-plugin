@@ -574,7 +574,7 @@ let _loader = {
         let name = msgsscr ? e.sender.card || e.user_id : Bot.nickname
         let id = msgsscr ? e.user_id : Bot.uin
 
-        if (e.isGroup) {
+        if (e?.isGroup) {
             try {
                 let info = await e.bot.getGroupMemberInfo(e.group_id, id)
                 name = info.card || info.nickname
