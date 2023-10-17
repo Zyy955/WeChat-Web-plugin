@@ -337,10 +337,10 @@ const adapter = new class WeChat {
         }
 
         /** 本地文件 */
-        else if (typeof file === "string" && fs.existsSync(file.replace(/^file:[/]{0,3}/, ""))) {
+        else if (typeof file === "string" && fs.existsSync(file.replace(/^file:[/]{0,2}/, ""))) {
             log = `[图片：${file}]`
-            name = path.basename(file.replace(/^file:[/]{0,3}/, ""))
-            file = fs.readFileSync(file.replace(/^file:[/]{0,3}/, ""))
+            name = path.basename(file.replace(/^file:[/]{0,2}/, ""))
+            file = fs.readFileSync(file.replace(/^file:[/]{0,2}/, ""))
         }
 
         /** url图片 */
