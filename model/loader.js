@@ -95,37 +95,38 @@ if (!QQGuild)
         }
     }
 
-/** 劫持修改getGroupMemberInfo方法 */
-Bot.getGroupMemberInfo = async function (group_id, user_id) {
-    let result
-    try {
-        result = await WeiXin.old.getGroupMemberInfo.call(this, group_id, user_id)
-    } catch (error) {
-        let nickname
-        if (error?.stack?.includes('ws-plugin')) {
-            nickname = 'chronocat'
-        } else {
-            nickname = String(group_id).includes("qg_") ? "QQGuild-Bot" : "WeChat-Bot"
+/** 还是修改一下，不然cvs这边没法用...  */
+if (!fs.existsSync("./plugins/ws-plugin/model/dlc/index.js")
+    && !fs.existsSync("./plugins/Lain-plugin")
+    && !fs.existsSync("./plugins/QQGuild-plugin")
+    && !fs.existsSync("./plugins/WeChat-plugin")
+) {
+    const getGroupMemberInfo = Bot.getGroupMemberInfo
+    Bot.getGroupMemberInfo = async function (group_id, user_id) {
+        try {
+            return await getGroupMemberInfo.call(this, group_id, user_id)
+        } catch (error) {
+            let nickname
+            error?.stack?.includes("ws-plugin") ? nickname = "chronocat" : nickname = String(group_id).includes("qg_") ? "QQGuild-Bot" : "WeChat-Bot"
+            return {
+                group_id,
+                user_id,
+                nickname,
+                card: nickname,
+                sex: "female",
+                age: 6,
+                join_time: "",
+                last_sent_time: "",
+                level: 1,
+                role: "member",
+                title: "",
+                title_expire_time: "",
+                shutup_time: 0,
+                update_time: "",
+                area: "南极洲",
+                rank: "潜水",
+            }
         }
-        result = {
-            group_id,
-            user_id,
-            nickname,
-            card: "",
-            sex: "female",
-            age: 6,
-            join_time: "",
-            last_sent_time: "",
-            level: 1,
-            role: "member",
-            title: "",
-            title_expire_time: "",
-            shutup_time: 0,
-            update_time: "",
-            area: "南极洲",
-            rank: "潜水",
-        }
-        return result
     }
 }
 
