@@ -1,3 +1,8 @@
+# 此仓库停止维护~，请使用 [Lian-plugin](https://gitee.com/Zyy955/Lain-plugin)，一样的插件，后续维护会转移到此仓库，安装即可使用
+# 此仓库停止维护~，请使用 [Lian-plugin](https://gitee.com/Zyy955/Lain-plugin)，一样的插件，后续维护会转移到此仓库，安装即可使用
+# 此仓库停止维护~，请使用 [Lian-plugin](https://gitee.com/Zyy955/Lain-plugin)，一样的插件，后续维护会转移到此仓库，安装即可使用
+
+
 QQ交流群~欢迎加入：`884587317`
 
 - 如果您对这个项目感到满意并认为它对你有所帮助，请给我一个`Star`！
